@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GoldenGate API Assistant</title>
+  <style>
+    :root {
+      --oracle-red: #C74634;
+      --oracle-dark: #1A1A1A;
+      --oracle-gray: #2C2C2C;
+      --bg: #F7F8FA;
+      --surface: #FFFFFF;
+      --border: #E2E4E9;
+      --text: #1A1A1A;
+      --muted: #6B7280;
+      --code-bg: #0D1117;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; height: 100vh; color: var(--text); }
+
+    /* HEADER */
+    #header {
+      background: var(--oracle-dark);
+      color: #fff;
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .oracle-wordmark { color: var(--oracle-red); font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+    .divider { width: 1px; height: 20px; background: #555; }
+    .product-name { color: #ccc; font-size: 14px; font-weight: 500; }
+    .back-link { color: #aaa; font-size: 12px; text-decoration: none; border: 1px solid #444; border-radius: 4px; padding: 4px 10px; display: flex; align-items: center; gap: 5px; transition: color 0.15s, border-color 0.15s; }
+    .back-link:hover { color: #fff; border-color: #888; }
+
+    /* STATUS BAR */
+    #status-bar {
+      background: var(--oracle-gray);
+      color: #aaa;
+      font-size: 11px;
+      padding: 6px 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      border-bottom: 1px solid #333;
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #555; flex-shrink: 0; }
+    .status-dot.loading { background: #f59e0b; animation: pulse 1s infinite; }
+    .status-dot.ready { background: #22c55e; }
+    .status-dot.error { background: var(--oracle-red); }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* CHAT AREA */
+    #chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* MESSAGES */
+    .msg { display: flex; gap: 12px; align-items: flex-start; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .msg.user { flex-direction: row-reverse; }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+    }
+    .msg.assistant .avatar { background: var(--oracle-red); color: #fff; }
+    .msg.user .avatar { background: #3B82F6; color: #fff; }
+    .bubble {
+      max-width: 78%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .msg.user .bubble { background: #3B82F6; color: #fff; border-color: #3B82F6; border-radius: 12px 12px 2px 12px; }
+    .msg.assistant .bubble { border-radius: 12px 12px 12px 2px; }
+
+    /* MARKDOWN RENDERING IN BUBBLES */
+    .bubble p { margin-bottom: 10px; }
+    .bubble p:last-child { margin-bottom: 0; }
+    .bubble strong { font-weight: 600; }
+    .bubble code {
+      background: rgba(0,0,0,0.07);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12.5px;
+    }
+    .msg.user .bubble code { background: rgba(255,255,255,0.2); }
+    .bubble pre {
+      background: var(--code-bg);
+      border-radius: 8px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      margin: 10px 0;
+      position: relative;
+    }
+    .bubble pre code {
+      background: none;
+      padding: 0;
+      color: #e6edf3;
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: #30363d;
+      color: #aaa;
+      border: none;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .copy-btn:hover { background: #484f58; color: #fff; }
+    .copy-btn.copied { color: #22c55e; }
+    .bubble ul, .bubble ol { padding-left: 20px; margin-bottom: 10px; }
+    .bubble li { margin-bottom: 4px; }
+    .bubble h3 { font-size: 14px; font-weight: 600; margin: 10px 0 6px; }
+
+    /* THINKING INDICATOR */
+    .thinking .bubble { display: flex; gap: 5px; align-items: center; padding: 14px 18px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: bounce 1.2s infinite; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-6px); } }
+
+    /* WELCOME STATE */
+    #welcome {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+    #welcome .icon { font-size: 40px; margin-bottom: 16px; }
+    #welcome h2 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    #welcome p { font-size: 14px; line-height: 1.6; max-width: 480px; margin: 0 auto 24px; }
+    .suggestions { display: flex; flex-direction: column; gap: 8px; max-width: 520px; margin: 0 auto; }
+    .suggestion {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .suggestion:hover { border-color: var(--oracle-red); box-shadow: 0 0 0 3px rgba(199,70,52,0.08); }
+    .suggestion .sq-icon { color: var(--oracle-red); font-size: 16px; flex-shrink: 0; }
+
+    /* INPUT AREA */
+    #input-area {
+      flex-shrink: 0;
+      padding: 16px 24px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    #input-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+    #user-input {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+      max-height: 140px;
+      overflow-y: auto;
+      transition: border-color 0.15s;
+    }
+    #user-input:focus { border-color: var(--oracle-red); }
+    #send-btn {
+      background: var(--oracle-red);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      flex-shrink: 0;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #send-btn:hover { background: #a83929; }
+    #send-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .input-hint { font-size: 11px; color: var(--muted); margin-top: 6px; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div id="header">
+  <div class="brand">
+    <span class="oracle-wordmark">ORACLE</span>
+    <div class="divider"></div>
+    <span class="product-name">GoldenGate API Assistant</span>
+  </div>
+  <a href="index.html" class="back-link">
+    ← API Reference
+  </a>
+</div>
+
+<div id="status-bar">
+  <div class="status-dot loading" id="status-dot"></div>
+  <span id="status-text">Loading API specification…</span>
+</div>
+
+<div id="chat-area">
+  <div id="welcome">
+    <div class="icon">⚡</div>
+    <h2>GoldenGate API Assistant</h2>
+    <p>Ask me anything about the GoldenGate REST API. I can generate curl commands, explain endpoints, and help you build integrations.</p>
+    <div class="suggestions">
+      <button class="suggestion" onclick="sendSuggestion(this.dataset.q)" data-q="How do I start a Replicat process? Show me the curl command.">
+        <span class="sq-icon">▶</span> How do I start a Replicat process? Show me the curl command.
+      </button>
+      <button class="suggestion" onclick="sendSuggestion(this.dataset.q)" data-q="What endpoints are available for managing Extract processes?">
+        <span class="sq-icon">🔍</span> What endpoints are available for managing Extract processes?
+      </button>
+      <button class="suggestion" onclick="sendSuggestion(this.dataset.q)" data-q="Generate a curl command to create a new credential store entry.">
+        <span class="sq-icon">🔐</span> Generate a curl command to create a new credential store entry.
+      </button>
+      <button class="suggestion" onclick="sendSuggestion(this.dataset.q)" data-q="Explain the difference between the Admin Server and Distribution Server APIs.">
+        <span class="sq-icon">📖</span> Explain the difference between the Admin Server and Distribution Server APIs.
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="input-area">
+  <div id="input-inner">
+    <textarea id="user-input" rows="1" placeholder="Ask about an endpoint, generate a curl command…" disabled></textarea>
+    <button id="send-btn" disabled onclick="sendMessage()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Send
+    </button>
+  </div>
+  <div class="input-hint">Shift+Enter for new line · Enter to send</div>
+</div>
+
+<script>
+  var specText = null;
+  var messages = [];
+  var isLoading = false;
+
+  // ── Load spec on page open ──
+  (function loadSpec() {
+    setStatus('loading', 'Loading API specification…');
+    fetch('swagger_23-26-1_improved.json')
+      .then(function(r) { return r.text(); })
+      .then(function(text) {
+        specText = text;
+        setStatus('ready', 'Spec loaded · 290 endpoints ready');
+        document.getElementById('user-input').disabled = false;
+        document.getElementById('send-btn').disabled = false;
+        document.getElementById('user-input').focus();
+      })
+      .catch(function(err) {
+        setStatus('error', 'Failed to load spec — ' + err.message);
+      });
+  })();
+
+  function setStatus(state, text) {
+    var dot = document.getElementById('status-dot');
+    dot.className = 'status-dot ' + state;
+    document.getElementById('status-text').textContent = text;
+  }
+
+  // ── Auto-resize textarea ──
+  var textarea = document.getElementById('user-input');
+  textarea.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 140) + 'px';
+  });
+  textarea.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  function sendSuggestion(q) {
+    if (!specText) return;
+    document.getElementById('user-input').value = q;
+    sendMessage();
+  }
+
+  function sendMessage() {
+    var input = document.getElementById('user-input');
+    var text = input.value.trim();
+    if (!text || isLoading || !specText) return;
+
+    // Hide welcome
+    var welcome = document.getElementById('welcome');
+    if (welcome) welcome.remove();
+
+    // Add user message
+    messages.push({ role: 'user', content: text });
+    appendMessage('user', text);
+    input.value = '';
+    input.style.height = 'auto';
+
+    // Show thinking
+    var thinkingId = appendThinking();
+    isLoading = true;
+    document.getElementById('send-btn').disabled = true;
+
+    // Build system prompt with full spec
+    var systemPrompt = [
+      'You are an expert assistant for the Oracle GoldenGate REST API.',
+      'You have deep knowledge of GoldenGate Microservices Architecture including Extract, Replicat, Distribution Paths, Receiver, and the Service Manager.',
+      '',
+      'The complete GoldenGate REST API specification (OpenAPI/Swagger) is provided below.',
+      'Use it to give precise, accurate answers.',
+      '',
+      'When generating curl commands:',
+      '- Use placeholder values like {{host}}, {{port}}, {{username}}, {{password}} for connection details',
+      '- Always include Content-Type and Accept headers where appropriate',
+      '- Show the full curl command in a code block with ```bash',
+      '- Briefly explain what the command does and note any important parameters',
+      '',
+      'When explaining endpoints:',
+      '- Be concise but complete',
+      '- Mention the HTTP method, path, and key parameters',
+      '- Note any important constraints or behaviors',
+      '',
+      '--- FULL API SPECIFICATION ---',
+      specText
+    ].join('\n');
+
+    // Call Anthropic API
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: messages
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      removeThinking(thinkingId);
+      isLoading = false;
+      document.getElementById('send-btn').disabled = false;
+
+      if (data.error) {
+        appendMessage('assistant', '⚠️ API error: ' + data.error.message);
+        messages.pop(); // remove failed user message
+        return;
+      }
+
+      var reply = data.content[0].text;
+      messages.push({ role: 'assistant', content: reply });
+      appendMessage('assistant', reply);
+      setStatus('ready', 'Spec loaded · ' + messages.length/2 + ' exchanges this session');
+    })
+    .catch(function(err) {
+      removeThinking(thinkingId);
+      isLoading = false;
+      document.getElementById('send-btn').disabled = false;
+      appendMessage('assistant', '⚠️ Request failed: ' + err.message);
+      messages.pop();
+    });
+  }
+
+  // ── DOM helpers ──
+  function appendMessage(role, content) {
+    var area = document.getElementById('chat-area');
+    var div = document.createElement('div');
+    div.className = 'msg ' + role;
+
+    var avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = role === 'user' ? 'You' : 'GG';
+
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = role === 'assistant' ? renderMarkdown(content) : escapeHtml(content);
+
+    // Add copy buttons to pre blocks
+    if (role === 'assistant') {
+      bubble.querySelectorAll('pre').forEach(function(pre) {
+        var btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.textContent = 'Copy';
+        btn.onclick = function() {
+          var code = pre.querySelector('code');
+          navigator.clipboard.writeText(code ? code.textContent : pre.textContent).then(function() {
+            btn.textContent = 'Copied!';
+            btn.classList.add('copied');
+            setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+          });
+        };
+        pre.style.position = 'relative';
+        pre.appendChild(btn);
+      });
+    }
+
+    div.appendChild(avatar);
+    div.appendChild(bubble);
+    area.appendChild(div);
+    area.scrollTop = area.scrollHeight;
+    return div;
+  }
+
+  var thinkingCounter = 0;
+  function appendThinking() {
+    var id = 'thinking-' + (++thinkingCounter);
+    var area = document.getElementById('chat-area');
+    var div = document.createElement('div');
+    div.className = 'msg assistant thinking';
+    div.id = id;
+
+    var avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = 'GG';
+
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+
+    div.appendChild(avatar);
+    div.appendChild(bubble);
+    area.appendChild(div);
+    area.scrollTop = area.scrollHeight;
+    return id;
+  }
+
+  function removeThinking(id) {
+    var el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  function escapeHtml(t) {
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Minimal markdown renderer ──
+  function renderMarkdown(text) {
+    // Code blocks first
+    text = text.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
+      return '<pre><code class="language-' + lang + '">' + escapeHtml(code.trimEnd()) + '</code></pre>';
+    });
+    // Inline code
+    text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // Bold
+    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // H3
+    text = text.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    // Unordered lists
+    text = text.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+    text = text.replace(/(<li>[\s\S]+?<\/li>)(?!\s*<li>)/g, '<ul>$1</ul>');
+    // Numbered lists
+    text = text.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+    // Paragraphs (double newline)
+    text = text.split(/\n{2,}/).map(function(block) {
+      if (/^<(pre|ul|ol|h3|li)/.test(block.trim())) return block;
+      return '<p>' + block.replace(/\n/g, '<br>') + '</p>';
+    }).join('\n');
+    return text;
+  }
+</script>
+
+</body>
+</html>
