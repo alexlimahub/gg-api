@@ -449,7 +449,7 @@
       loading.style.opacity = '1';
     }
 
-    // Destroy and recreate the web component — setAttribute alone doesn't trigger re-render
+    // Destroy and recreate — setAttribute alone doesn't trigger Elements re-render
     wrap.innerHTML = '';
 
     setTimeout(() => {
@@ -458,11 +458,12 @@
       el.setAttribute('router', 'hash');
       el.setAttribute('layout', 'sidebar');
       wrap.appendChild(el);
-
-      setTimeout(() => {
-        if (loading) loading.classList.add('hidden');
-      }, 1200);
     }, 100);
+
+    // Always hide after fixed delay — Elements has no reliable onload event
+    setTimeout(() => {
+      if (loading) loading.classList.add('hidden');
+    }, 2500);
   }
 </script>
 
