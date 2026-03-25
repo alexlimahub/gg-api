@@ -439,8 +439,30 @@
   });
 
   function switchSpec(url) {
-    const el = document.getElementById('elements');
-    if (el) el.setAttribute('apiDescriptionUrl', url);
+    const wrap = document.getElementById('elements-wrap');
+    if (!wrap) return;
+
+    // Show loading spinner
+    const loading = document.getElementById('loading');
+    if (loading) {
+      loading.classList.remove('hidden');
+      loading.style.opacity = '1';
+    }
+
+    // Destroy and recreate the web component — setAttribute alone doesn't trigger re-render
+    wrap.innerHTML = '';
+
+    setTimeout(() => {
+      const el = document.createElement('elements-api');
+      el.setAttribute('apiDescriptionUrl', url);
+      el.setAttribute('router', 'hash');
+      el.setAttribute('layout', 'sidebar');
+      wrap.appendChild(el);
+
+      setTimeout(() => {
+        if (loading) loading.classList.add('hidden');
+      }, 1200);
+    }, 100);
   }
 </script>
 
