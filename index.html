@@ -1,254 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Oracle GoldenGate REST API Reference</title>
-
-  <!-- Stoplight Elements -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GoldenGate REST API Reference</title>
+  <link rel="stylesheet" href="https://unpkg.com/@stoplight/elements/styles.min.css" />
   <script src="https://unpkg.com/@stoplight/elements/web-components.min.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/@stoplight/elements/styles.min.css">
-
   <style>
     :root {
       --oracle-red: #C74634;
-      --oracle-red-dark: #9E2F21;
       --oracle-dark: #1A1A1A;
-      --oracle-border: #E0DDD8;
+      --oracle-gray: #2C2C2C;
+      --oracle-light: #F0F0F0;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body {
-      height: 100%;
-      font-family: 'Helvetica Neue', Arial, sans-serif;
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
     }
 
-    /* ── TOP HEADER ── */
-    #gg-header {
+    /* ── HEADER ── */
+    #header {
       background: var(--oracle-dark);
-      border-bottom: 3px solid var(--oracle-red);
+      color: #fff;
       padding: 0 24px;
+      height: 52px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 52px;
       flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    .brand {
+    #header .brand {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
 
-    .oracle-wordmark {
-      font-size: 15px;
+    #header .oracle-wordmark {
+      color: var(--oracle-red);
+      font-size: 18px;
       font-weight: 700;
-      color: #fff;
-      letter-spacing: 1px;
-      text-transform: uppercase;
+      letter-spacing: -0.5px;
     }
 
-    .header-divider {
+    #header .divider {
       width: 1px;
-      height: 18px;
-      background: #444;
+      height: 20px;
+      background: #555;
     }
 
-    .product-name {
-      font-size: 13px;
-      color: #999;
-      font-weight: 300;
+    #header .product-name {
+      color: #ccc;
+      font-size: 14px;
+      font-weight: 500;
     }
 
-    .header-right {
+    #header .header-right {
       display: flex;
       align-items: center;
       gap: 16px;
     }
 
-    .version-wrap {
+    #version-selector {
+      background: var(--oracle-gray);
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    #version-selector:focus { outline: none; border-color: var(--oracle-red); }
+
+    /* ── LOADING BAR ── */
+    #loading-bar {
+      display: none;
+      height: 3px;
+      width: 0%;
+      background: var(--oracle-red);
+      flex-shrink: 0;
+      box-shadow: 0 0 8px rgba(199,70,52,0.5);
+      transition: width 4s ease-out;
+    }
+
+    /* ── BANNER ── */
+    #banner {
+      background: linear-gradient(135deg, #1A1A1A 0%, #2C2C2C 100%);
+      color: #fff;
+      padding: 28px 32px 24px;
+      flex-shrink: 0;
+      border-bottom: 1px solid #333;
+    }
+
+    #banner .eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--oracle-red);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    #banner h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    #banner p {
+      font-size: 13px;
+      color: #aaa;
+      max-width: 720px;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .pill {
+      background: rgba(199,70,52,0.15);
+      border: 1px solid rgba(199,70,52,0.35);
+      color: #ff8c7a;
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .stats {
+      display: flex;
+      gap: 24px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat .num {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--oracle-red);
+      line-height: 1;
+    }
+
+    .stat .lbl {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #777;
+      margin-top: 2px;
+    }
+
+    /* ── AUTH NOTICE ── */
+    #auth-notice {
+      background: #fff8f7;
+      border-left: 4px solid var(--oracle-red);
+      padding: 10px 20px;
+      font-size: 12px;
+      color: #444;
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .version-wrap label {
-      font-size: 12px;
-      color: #888;
-    }
+    #auth-notice strong { color: var(--oracle-dark); }
 
-    .version-wrap select {
-      background: #2C2C2C;
-      border: 1px solid #444;
-      color: #fff;
-      font-size: 12px;
-      padding: 4px 24px 4px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 7px center;
-    }
-
-    .version-wrap select:focus { outline: none; border-color: var(--oracle-red); }
-
-    .header-link {
-      font-size: 12px;
-      color: #888;
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-    .header-link:hover { color: #fff; }
-
-    /* ── INTRO BANNER ── */
-    #gg-intro {
-      background: var(--oracle-dark);
-      padding: 28px 32px 24px;
-      border-bottom: 1px solid #2A2A2A;
-      position: relative;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-
-    #gg-intro::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 85% 50%, rgba(199,70,52,0.15) 0%, transparent 60%);
-      pointer-events: none;
-    }
-
-    #gg-intro::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0;
-      width: 200px; height: 2px;
-      background: linear-gradient(90deg, var(--oracle-red), transparent);
-    }
-
-    .intro-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      max-width: 1600px;
-    }
-
-    .intro-left { flex: 1; }
-
-    .intro-eyebrow {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--oracle-red);
-      margin-bottom: 8px;
-    }
-
-    .intro-title {
-      font-size: 22px;
-      font-weight: 300;
-      color: #fff;
-      line-height: 1.3;
-      margin-bottom: 8px;
-    }
-
-    .intro-title strong { font-weight: 700; }
-
-    .intro-desc {
-      font-size: 13px;
-      color: #888;
-      line-height: 1.7;
-      max-width: 580px;
-      margin-bottom: 14px;
-    }
-
-    .intro-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .pill {
-      font-size: 11px;
-      font-weight: 500;
-      padding: 3px 10px;
-      border-radius: 20px;
-      border: 1px solid;
-    }
-
-    .pill-red {
-      background: rgba(199,70,52,0.15);
-      border-color: rgba(199,70,52,0.35);
-      color: #E8806E;
-    }
-
-    .pill-gray {
-      background: rgba(255,255,255,0.05);
-      border-color: rgba(255,255,255,0.12);
-      color: #999;
-    }
-
-    .intro-stats {
-      display: flex;
-      gap: 16px;
-      flex-shrink: 0;
-    }
-
-    .stat {
-      text-align: center;
-      padding: 12px 20px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 6px;
-    }
-
-    .stat-num {
-      font-size: 26px;
-      font-weight: 700;
-      color: #fff;
-      line-height: 1;
-    }
-
-    .stat-lbl {
-      font-size: 10px;
-      color: #666;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-top: 4px;
-    }
-
-    /* ── AUTH NOTICE ── */
-    #auth-notice {
-      background: #FFF8F6;
-      border-bottom: 1px solid #F0E0DC;
-      padding: 9px 24px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 12.5px;
-      color: #555;
-      flex-shrink: 0;
-    }
-
-    #auth-notice .notice-icon { color: var(--oracle-red); flex-shrink: 0; }
-
-    #auth-notice code {
-      font-family: 'Courier New', monospace;
-      font-size: 11.5px;
-      background: rgba(199,70,52,0.08);
-      padding: 1px 5px;
-      border-radius: 3px;
-      color: var(--oracle-red-dark);
-    }
-
-    #auth-notice strong { color: #C74634; }
-
-    /* ── ELEMENTS FILL REMAINING HEIGHT ── */
+    /* ── ELEMENTS WRAP ── */
     #elements-wrap {
       flex: 1;
       overflow: hidden;
@@ -256,185 +190,145 @@
     }
 
     elements-api {
-      display: block;
       height: 100%;
+      display: block;
     }
 
-    /* ── LAYOUT ── */
-    #app {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-
-    /* ── FOOTER ── */
-    #gg-footer {
-      background: var(--oracle-dark);
-      border-top: 1px solid #2A2A2A;
-      padding: 14px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-
-    #gg-footer .footer-left { font-size: 11px; color: #555; }
-    #gg-footer .footer-links { display: flex; gap: 18px; }
-
-    #gg-footer a {
-      font-size: 11px;
-      color: #555;
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-    #gg-footer a:hover { color: #E8503A; }
-
-    /* ── LOADING ── */
+    /* ── LOADING OVERLAY ── */
     #loading {
       position: fixed;
       inset: 0;
-      background: #FAFAF8;
+      background: #fff;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 9999;
+      flex-direction: column;
       gap: 16px;
-      transition: opacity 0.3s ease;
+      z-index: 9999;
+      transition: opacity 0.4s ease;
     }
 
     #loading.hidden { opacity: 0; pointer-events: none; }
 
     .spinner {
-      width: 40px; height: 40px;
-      border: 2px solid #E0DDD8;
+      width: 40px;
+      height: 40px;
+      border: 3px solid #eee;
       border-top-color: var(--oracle-red);
       border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      animation: spin 0.8s linear infinite;
     }
-
-    .loading-text { font-size: 13px; color: #999; }
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 768px) {
-      .intro-stats { display: none; }
-      #gg-intro { padding: 20px 16px; }
-      .version-wrap label { display: none; }
-      .header-link { display: none; }
+    .loading-text {
+      font-size: 13px;
+      color: #888;
     }
+
+    /* ── FOOTER ── */
+    #footer {
+      background: var(--oracle-dark);
+      color: #888;
+      padding: 10px 24px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-top: 1px solid #333;
+    }
+
+    #footer a { color: #aaa; text-decoration: none; }
+    #footer a:hover { color: var(--oracle-red); }
+    .footer-links { display: flex; gap: 16px; }
   </style>
 </head>
 <body>
 
+<!-- Initial loading overlay -->
 <div id="loading">
   <div class="spinner"></div>
   <div class="loading-text">Loading GoldenGate API Reference…</div>
 </div>
 
-<div id="app">
-
-  <!-- Header -->
-  <header id="gg-header">
-    <div class="brand">
-      <div class="oracle-wordmark">Oracle</div>
-      <div class="header-divider"></div>
-      <div class="product-name">GoldenGate REST API Reference</div>
-    </div>
-    <div class="header-right">
-      <div class="version-wrap">
-        <label>Version:</label>
-        <select id="version-select" onchange="switchSpec(this.value)">
-          <option value="swagger_23-26-1_improved.json" selected>26.1 / 23ai — Enhanced</option>
-          <option value="swagger_23-26-1.json">26.1 / 23ai — Original</option>
-        </select>
-      </div>
-      <a class="header-link" href="https://docs.oracle.com/en/database/goldengate/core/26/oggra/" target="_blank">Official Docs ↗</a>
-      <a class="header-link" href="https://support.oracle.com" target="_blank">Support ↗</a>
-    </div>
-  </header>
-
-  <!-- Intro banner -->
-  <section id="gg-intro">
-    <div class="intro-inner">
-      <div class="intro-left">
-        <div class="intro-eyebrow">Interactive API Reference</div>
-        <h1 class="intro-title">Oracle <strong>GoldenGate</strong> REST API</h1>
-        <p class="intro-desc">
-          Full programmatic access to GoldenGate Microservices Architecture — Service Manager,
-          Administration Service, Distribution Service, Receiver Service, and Performance Metrics Service.
-          Browse endpoints, inspect schemas, and test calls against your own deployment.
-        </p>
-        <div class="intro-pills">
-          <span class="pill pill-red">GoldenGate 26.1 / 23ai</span>
-          <span class="pill pill-gray">Microservices Architecture</span>
-          <span class="pill pill-gray">REST · JSON</span>
-          <span class="pill pill-gray">Basic Auth</span>
-          <span class="pill pill-gray">API v2</span>
-        </div>
-      </div>
-      <div class="intro-stats">
-        <div class="stat">
-          <div class="stat-num">213</div>
-          <div class="stat-lbl">Paths</div>
-        </div>
-        <div class="stat">
-          <div class="stat-num">290</div>
-          <div class="stat-lbl">Endpoints</div>
-        </div>
-        <div class="stat">
-          <div class="stat-num">5</div>
-          <div class="stat-lbl">Services</div>
-        </div>
-        <div class="stat">
-          <div class="stat-num">52</div>
-          <div class="stat-lbl">Tag Groups</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Auth notice -->
-  <div id="auth-notice">
-    <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-      <path d="M8 1a4 4 0 0 1 4 4v1h1a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h1V5a4 4 0 0 1 4-4zm0 1.5A2.5 2.5 0 0 0 5.5 5v1h5V5A2.5 2.5 0 0 0 8 2.5z"/>
-    </svg>
-    <span>
-      <strong>Authentication:</strong> All endpoints require <code>HTTP Basic Auth</code>.
-      Use your GoldenGate service account credentials when using Try It.
-      Default ports — Service Manager: <code>9011</code> · Admin: <code>9012</code> · Distribution: <code>9013</code> · Receiver: <code>9014</code> · Metrics: <code>9015</code>.
-      All paths use API version <code>v2</code>.
-    </span>
+<!-- Sticky header -->
+<div id="header">
+  <div class="brand">
+    <span class="oracle-wordmark">ORACLE</span>
+    <div class="divider"></div>
+    <span class="product-name">GoldenGate REST API Reference</span>
   </div>
-
-  <!-- Stoplight Elements -->
-  <div id="elements-wrap">
-    <elements-api
-      id="elements"
-      apiDescriptionUrl="swagger_23-26-1_improved.json"
-      router="memory"
-      layout="sidebar"
-    />
+  <div class="header-right">
+    <select id="version-selector" onchange="switchSpec(this.value)">
+      <option value="swagger_23-26-1_improved.json">26.1 / 23ai — Enhanced</option>
+      <option value="swagger_23-26-1.json">26.1 / 23ai — Original</option>
+    </select>
   </div>
+</div>
 
-  <!-- Footer -->
-  <footer id="gg-footer">
-    <div class="footer-left">© 2026 Oracle and/or its affiliates. Oracle GoldenGate REST API Reference.</div>
-    <div class="footer-links">
-      <a href="https://docs.oracle.com/en/database/goldengate/" target="_blank">GoldenGate Docs Hub</a>
-      <a href="https://docs.oracle.com/en/database/goldengate/core/26/oggra/" target="_blank">Official API Docs</a>
-      <a href="https://support.oracle.com" target="_blank">Oracle Support</a>
-    </div>
-  </footer>
+<!-- Loading bar (slim, non-blocking) -->
+<div id="loading-bar"></div>
 
+<!-- Intro banner -->
+<div id="banner">
+  <div class="eyebrow">Oracle GoldenGate Microservices Architecture</div>
+  <h1>REST API Reference</h1>
+  <p>
+    Interactive documentation for the GoldenGate 26.1 / 23ai Microservices REST API.
+    Authenticate with HTTP Basic Auth using your GoldenGate administrator credentials.
+    Each service runs on its own port — see the auth notice below for port details.
+  </p>
+  <div class="pills">
+    <span class="pill">GoldenGate 26.1 / 23ai</span>
+    <span class="pill">Microservices Architecture</span>
+    <span class="pill">REST · JSON</span>
+    <span class="pill">Basic Auth</span>
+    <span class="pill">API v2</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="num">213</div><div class="lbl">Paths</div></div>
+    <div class="stat"><div class="num">290</div><div class="lbl">Endpoints</div></div>
+    <div class="stat"><div class="num">5</div><div class="lbl">Services</div></div>
+    <div class="stat"><div class="num">52</div><div class="lbl">Tag Groups</div></div>
+  </div>
+</div>
+
+<!-- Auth notice -->
+<div id="auth-notice">
+  🔐 <strong>Basic Auth required.</strong>
+  Service ports: SM :9011 &nbsp;|&nbsp; Admin :9012 &nbsp;|&nbsp; Distribution :9013 &nbsp;|&nbsp; Receiver :9014 &nbsp;|&nbsp; Metrics :9015
+</div>
+
+<!-- Stoplight Elements -->
+<div id="elements-wrap">
+  <elements-api
+    id="gg-elements"
+    apiDescriptionUrl="swagger_23-26-1_improved.json"
+    router="memory"
+    layout="sidebar"
+  ></elements-api>
+</div>
+
+<!-- Footer -->
+<div id="footer">
+  <span>© 2025 Oracle Corporation. GoldenGate 26.1 / 23ai</span>
+  <div class="footer-links">
+    <a href="https://docs.oracle.com/en/middleware/goldengate/core/index.html" target="_blank">GoldenGate Docs Hub</a>
+    <a href="https://docs.oracle.com/en/middleware/goldengate/core/21.3/oracle-goldengate-rest-api-reference/index.html" target="_blank">Official API Docs</a>
+    <a href="https://support.oracle.com" target="_blank">Oracle Support</a>
+  </div>
 </div>
 
 <script>
+  // Hide initial loading overlay
   window.addEventListener('load', () => {
     setTimeout(() => {
       const l = document.getElementById('loading');
-      if (l) l.classList.add('hidden');
+      if (l) {
+        l.classList.add('hidden');
+        setTimeout(() => { if (l.parentNode) l.remove(); }, 400);
+      }
     }, 1500);
   });
 
@@ -442,16 +336,20 @@
     const wrap = document.getElementById('elements-wrap');
     if (!wrap) return;
 
-    // Show loading spinner
-    const loading = document.getElementById('loading');
-    if (loading) {
-      loading.classList.remove('hidden');
-      loading.style.opacity = '1';
+    // Show slim loading bar (non-blocking)
+    const bar = document.getElementById('loading-bar');
+    if (bar) {
+      bar.style.transition = 'none';
+      bar.style.width = '0%';
+      bar.style.display = 'block';
+      setTimeout(() => {
+        bar.style.transition = 'width 4s ease-out';
+        bar.style.width = '85%';
+      }, 50);
     }
 
-    // Destroy and recreate — setAttribute alone doesn't trigger Elements re-render
+    // Destroy and recreate elements-api (setAttribute alone doesn't trigger re-render)
     wrap.innerHTML = '';
-
     setTimeout(() => {
       const el = document.createElement('elements-api');
       el.setAttribute('apiDescriptionUrl', url);
@@ -460,10 +358,17 @@
       wrap.appendChild(el);
     }, 100);
 
-    // Always hide after fixed delay — Elements has no reliable onload event
+    // Complete the loading bar
     setTimeout(() => {
-      if (loading) loading.classList.add('hidden');
-    }, 2500);
+      if (bar) {
+        bar.style.transition = 'width 0.3s ease';
+        bar.style.width = '100%';
+        setTimeout(() => {
+          bar.style.display = 'none';
+          bar.style.width = '0%';
+        }, 400);
+      }
+    }, 5000);
   }
 </script>
 
