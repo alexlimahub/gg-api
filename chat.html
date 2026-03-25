@@ -362,7 +362,7 @@
     ].join('\n');
 
     // Call Anthropic API
-    fetch('https://api.anthropic.com/v1/messages', {
+    fetch('https://gg-api-proxy.alexlima.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
