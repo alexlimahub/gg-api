@@ -413,7 +413,7 @@
     <elements-api
       id="elements"
       apiDescriptionUrl="swagger_23-26-1_improved.json"
-      router="hash"
+      router="memory"
       layout="sidebar"
     />
   </div>
@@ -455,7 +455,7 @@
     setTimeout(() => {
       const el = document.createElement('elements-api');
       el.setAttribute('apiDescriptionUrl', url);
-      el.setAttribute('router', 'hash');
+      el.setAttribute('router', 'memory');
       el.setAttribute('layout', 'sidebar');
       wrap.appendChild(el);
     }, 100);
